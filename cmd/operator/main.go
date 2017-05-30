@@ -37,12 +37,18 @@ import (
 	examplecontroller "github.com/lukebond/k8s-operator-skeleton/pkg/controller"
 )
 
+var (
+	kubeconfigPath string
+	masterUrl      string
+)
+
 func main() {
-	kubeconfig := flag.String("kubeconfig", "", "Path to a kube config. Only required if out-of-cluster.")
+	flag.StringVar(&kubeconfigPath, "kubeconfig", "", "Path to a kube config. Only required if out-of-cluster.")
+	flag.StringVar(&masterUrl, "master", "", "API server address. Omit to run in-cluster using the service account token. Not recommended for production.")
 	flag.Parse()
 
 	// Create the client config. Use kubeconfig if given, otherwise assume in-cluster.
-	config, err := buildConfig(*kubeconfig)
+	config, err := buildConfig(kubeconfigPath, masterUrl)
 	if err != nil {
 		panic(err)
 	}
@@ -124,9 +130,9 @@ func main() {
 	fmt.Printf("LIST: %#v\n", exampleList)
 }
 
-func buildConfig(kubeconfig string) (*rest.Config, error) {
-	if kubeconfig != "" {
-		return clientcmd.BuildConfigFromFlags("", kubeconfig)
+func buildConfig(kubeconfig string, masterUrl string) (*rest.Config, error) {
+	if kubeconfig != "" || masterUrl != "" {
+		return clientcmd.BuildConfigFromFlags(masterUrl, kubeconfig)
 	}
 	return rest.InClusterConfig()
 }
