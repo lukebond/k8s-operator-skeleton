@@ -28,7 +28,7 @@ var (
 )
 
 // GroupName is the group name use in this package
-const GroupName = "tpr.client-go.k8s.io"
+const GroupName = "lukeb0nd.com"
 
 // SchemeGroupVersion is group version used to register these objects
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1"}
