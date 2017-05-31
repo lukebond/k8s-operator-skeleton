@@ -1,0 +1,10 @@
+apiVersion: "lukeb0nd.com/v1"
+kind: "Example"
+metadata:
+  name: "example1"
+spec:
+  foo: "hello"
+  bar: true
+status:
+  state: "Created"
+  message: "Created, not processed yet"

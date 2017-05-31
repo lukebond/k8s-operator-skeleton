@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: k8s-operator-skeleton
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: k8s-operator-skeleton
+    spec:
+      containers:
+      - name: k8s-operator-skeleton
+        image: quay.io/lukebond/k8s-operator-skeleton:v1.0.0
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
