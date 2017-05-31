@@ -23,9 +23,7 @@ import (
 	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	apiv1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -62,6 +60,10 @@ func main() {
 	err = exampleclient.CreateTPR(clientset)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		panic(err)
+	} else if err != nil {
+		fmt.Println("TPR already exists")
+	} else {
+		fmt.Println("TPR created")
 	}
 
 	// make a new config for our extension's API group, using the first config as a baseline
@@ -86,38 +88,12 @@ func main() {
 	defer cancelFunc()
 	go controller.Run(ctx)
 
-	// Create an instance of our TPR
-	example := &tprv1.Example{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "example1",
-		},
-		Spec: tprv1.ExampleSpec{
-			Foo: "hello",
-			Bar: true,
-		},
-		Status: tprv1.ExampleStatus{
-			State:   tprv1.ExampleStateCreated,
-			Message: "Created, not processed yet",
-		},
-	}
-	var result tprv1.Example
-	err = exampleClient.Post().
-		Resource(tprv1.ExampleResourcePlural).
-		Namespace(apiv1.NamespaceDefault).
-		Body(example).
-		Do().Into(&result)
-	if err == nil {
-		fmt.Printf("CREATED: %#v\n", result)
-	} else if apierrors.IsAlreadyExists(err) {
-		fmt.Printf("ALREADY EXISTS: %#v\n", result)
-	} else {
-		panic(err)
-	}
-
-	// Poll until Example object is handled by controller and gets status updated to "Processed"
-	err = exampleclient.WaitForExampleInstanceProcessed(exampleClient, "example1")
-	if err != nil {
-		panic(err)
+	for {
+		// Poll until Example object is handled by controller and gets status updated to "Processed"
+		err = exampleclient.WaitForExampleInstanceProcessed(exampleClient, "example1")
+		if err == nil {
+			break
+		}
 	}
 	fmt.Print("PROCESSED\n")
 
@@ -128,11 +104,17 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("LIST: %#v\n", exampleList)
+
+	// infinite loop as placeholder for long-running functionality
+	for {
+	}
 }
 
 func buildConfig(kubeconfig string, masterUrl string) (*rest.Config, error) {
 	if kubeconfig != "" || masterUrl != "" {
+		fmt.Println("Creating out-of-cluster config")
 		return clientcmd.BuildConfigFromFlags(masterUrl, kubeconfig)
 	}
+	fmt.Println("Creating in-cluster config")
 	return rest.InClusterConfig()
 }
